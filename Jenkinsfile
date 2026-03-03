@@ -42,7 +42,7 @@ pipeline {
                         parameters: [
                             string(
                                 name: 'BRANCH',
-                                defaultValue: 'master',
+                                defaultValue: 'main',
                                 description: 'Enter the branch name to build'
                             )
                         ]
@@ -73,7 +73,7 @@ pipeline {
         stage('Login to Docker Hub') {
             steps {
                 withCredentials([usernamePassword(
-                    credentialsId: '519b7b0b-4d34-4856-a6cc-8b107cb05bac',
+                    credentialsId: '4ec188ef-72fe-4bfb-86c3-616e90e9e00f',
                     usernameVariable: 'DOCKER_USERNAME',
                     passwordVariable: 'DOCKER_PASSWORD'
                 )]) {
@@ -88,7 +88,7 @@ pipeline {
         stage('Push Docker Image') {
             steps {
                 sh '''
-                echo "📦 Pushing image to Docker Hub..."
+                echo "📦 Pushing Docker image..."
                 docker push $DOCKER_IMAGE
                 '''
             }
@@ -99,7 +99,7 @@ pipeline {
                 sh '''
                 echo "🚀 Deploying to Kubernetes..."
                 microk8s.kubectl apply -f $DEPLOY_FILE
-                echo "Waiting for pods to stabilize..."
+                echo "Waiting for pods..."
                 sleep 20
                 microk8s.kubectl get pods
                 '''
@@ -127,7 +127,7 @@ pipeline {
             echo '✅ CI/CD pipeline executed successfully.'
         }
         failure {
-            echo '❌ Build or deploy failed. Please check logs.'
+            echo '❌ Build or deployment failed. Check logs.'
         }
         aborted {
             echo '⚠️ Pipeline aborted by user.'
