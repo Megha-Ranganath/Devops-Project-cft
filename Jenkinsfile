@@ -60,10 +60,10 @@ pipeline {
                 script {
                      {
                         withCredentials([usernamePassword(credentialsId: '519b7b0b-4d34-4856-a6cc-8b107cb05bac', passwordVariable: 'DOCKER-PASSWORD', usernameVariable: 'DOCKER-USER')]) {
-                        sh "echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin"
-                    }
+                        sh "echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin"}
+                     }
                 }
-            }
+             }
         }
 
         stage('Push Docker Image') {
@@ -115,6 +115,7 @@ pipeline {
         }
     }
 }
+
 
 
 
