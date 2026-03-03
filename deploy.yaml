@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: devops-app-c5
-        image: manjukolkar007/test-dev:latest
+        image: megharn/devops-project:latest
         ports:
         - containerPort: 80
 ---
@@ -49,4 +49,5 @@ spec:
             name: devops-service
             port:
               number: 80
+
 
