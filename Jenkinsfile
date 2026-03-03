@@ -15,8 +15,15 @@ pipeline {
                     def userInput = input(
                         id: 'userConfirm',
                         message: 'Do you want to build this project?',
-                        parameters: [choice(name: 'CONFIRM', choices: ['Yes', 'No'], description: 'Select Yes to proceed or No to abort')]
+                        parameters: [
+                            choice(
+                                name: 'CONFIRM',
+                                choices: ['Yes', 'No'],
+                                description: 'Select Yes to proceed or No to abort'
+                            )
+                        ]
                     )
+
                     if (userInput == 'No') {
                         echo "🚫 Build aborted by user."
                         currentBuild.result = 'ABORTED'
@@ -32,8 +39,15 @@ pipeline {
                     def branchInput = input(
                         id: 'branchSelect',
                         message: 'Select the branch to build:',
-                        parameters: [string(name: 'BRANCH', defaultValue: 'master', description: 'Enter the branch name to build')]
+                        parameters: [
+                            string(
+                                name: 'BRANCH',
+                                defaultValue: 'master',
+                                description: 'Enter the branch name to build'
+                            )
+                        ]
                     )
+
                     env.BRANCH_NAME = branchInput
                     echo "✅ Selected Branch: ${env.BRANCH_NAME}"
                 }
@@ -42,7 +56,8 @@ pipeline {
 
         stage('Clone Repository') {
             steps {
-                git branch: "${env.BRANCH_NAME}", url: 'https://github.com/Megha-Ranganath/Devops-Project-cft.git'
+                git branch: "${env.BRANCH_NAME}",
+                    url: 'https://github.com/Megha-Ranganath/Devops-Project-cft.git'
             }
         }
 
@@ -57,13 +72,17 @@ pipeline {
 
         stage('Login to Docker Hub') {
             steps {
-                script {
-                     {
-                        withCredentials([usernamePassword(credentialsId: '519b7b0b-4d34-4856-a6cc-8b107cb05bac', passwordVariable: 'DOCKER-PASSWORD', usernameVariable: 'DOCKER-USER')]) {
-                        sh "echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin"}
-                     }
+                withCredentials([usernamePassword(
+                    credentialsId: '519b7b0b-4d34-4856-a6cc-8b107cb05bac',
+                    usernameVariable: 'DOCKER_USERNAME',
+                    passwordVariable: 'DOCKER_PASSWORD'
+                )]) {
+                    sh '''
+                    echo "🔐 Logging into Docker Hub..."
+                    echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
+                    '''
                 }
-             }
+            }
         }
 
         stage('Push Docker Image') {
@@ -90,13 +109,13 @@ pipeline {
         stage('Apply Ingress & Verify') {
             steps {
                 sh '''
-                echo "🌐 Applying Ingress for domain $DOMAIN ..."
+                echo "🌐 Applying Ingress..."
                 microk8s.kubectl apply -f $DEPLOY_FILE
-                echo "Waiting for ingress to be ready..."
+                echo "Waiting for ingress..."
                 sleep 20
                 microk8s.kubectl get ingress
-                echo "🔍 Verifying application availability..."
-                curl -I http://$DOMAIN || echo "⚠️ Could not verify via curl, please check browser."
+                echo "🔍 Verifying application..."
+                curl -I http://$DOMAIN || echo "⚠️ Curl verification failed."
                 echo "✅ Deployment complete! Access: http://$DOMAIN"
                 '''
             }
@@ -105,17 +124,13 @@ pipeline {
 
     post {
         success {
-            echo '✅ CI/CD pipeline executed successfully. App deployed and accessible via Ingress.'
+            echo '✅ CI/CD pipeline executed successfully.'
         }
         failure {
-            echo '❌ Build or deploy failed. Please review Jenkins logs.'
+            echo '❌ Build or deploy failed. Please check logs.'
         }
         aborted {
             echo '⚠️ Pipeline aborted by user.'
         }
     }
 }
-
-
-
-
