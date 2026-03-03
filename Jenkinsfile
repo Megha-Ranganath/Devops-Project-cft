@@ -2,9 +2,9 @@ pipeline {
     agent any
 
     environment {
-        DOCKER_IMAGE = 'manjukolkar007/test-dev:latest'
+        DOCKER_IMAGE = 'megharn/devops-project:latest'
         DEPLOY_FILE  = 'deploy.yaml'
-        DOMAIN       = 'micro123.duckdns.org'
+        DOMAIN       = 'project-cicd.duckdns.org'
     }
 
     stages {
@@ -42,7 +42,7 @@ pipeline {
 
         stage('Clone Repository') {
             steps {
-                git branch: "${env.BRANCH_NAME}", url: 'https://github.com/manjukolkar/scroll-web.git'
+                git branch: "${env.BRANCH_NAME}", url: 'https://github.com/Megha-Ranganath/Devops-Project-cft.git'
             }
         }
 
@@ -114,4 +114,5 @@ pipeline {
         }
     }
 }
+
 
