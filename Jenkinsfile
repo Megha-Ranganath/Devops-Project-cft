@@ -42,7 +42,7 @@ pipeline {
                         parameters: [
                             string(
                                 name: 'BRANCH',
-                                defaultValue: 'main',
+                                defaultValue: 'master',
                                 description: 'Enter the branch name to build'
                             )
                         ]
@@ -134,3 +134,4 @@ pipeline {
         }
     }
 }
+
