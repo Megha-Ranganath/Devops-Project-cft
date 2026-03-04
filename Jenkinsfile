@@ -2,62 +2,28 @@ pipeline {
     agent any
 
     environment {
-        DOCKER_IMAGE = 'megharn/devops-project:latest'
-        DEPLOY_FILE  = 'deploy.yaml'
-        DOMAIN       = 'project-cicd.duckdns.org'
+        DOCKER_IMAGE = "megharn/devops-project:latest"
+        DEPLOY_FILE  = "deploy.yaml"
+        DOMAIN       = "project-cicd.duckdns.org"
     }
 
     stages {
 
-        stage('User Confirmation') {
+        stage('Checkout Code') {
             steps {
-                script {
-                    def userInput = input(
-                        id: 'userConfirm',
-                        message: 'Do you want to build this project?',
-                        parameters: [
-                            choice(
-                                name: 'CONFIRM',
-                                choices: ['Yes', 'No'],
-                                description: 'Select Yes to proceed or No to abort'
-                            )
-                        ]
-                    )
-
-                    if (userInput == 'No') {
-                        echo "🚫 Build aborted by user."
-                        currentBuild.result = 'ABORTED'
-                        error("User chose not to proceed.")
-                    }
-                }
-            }
-        }
-
-        stage('Select Branch') {
-            steps {
-                script {
-                    def branchInput = input(
-                        id: 'branchSelect',
-                        message: 'Select the branch to build:',
-                        parameters: [
-                            string(
-                                name: 'BRANCH',
-                                defaultValue: 'master',
-                                description: 'Enter the branch name to build'
-                            )
-                        ]
-                    )
-
-                    env.BRANCH_NAME = branchInput
-                    echo "✅ Selected Branch: ${env.BRANCH_NAME}"
-                }
-            }
-        }
-
-        stage('Clone Repository') {
-            steps {
-                git branch: "${env.BRANCH_NAME}",
+                git branch: 'master',
                     url: 'https://github.com/Megha-Ranganath/Devops-Project-cft.git'
+            }
+        }
+
+        stage('Debug Workspace') {
+            steps {
+                sh '''
+                echo "📂 Current Directory:"
+                pwd
+                echo "📂 Files in Workspace:"
+                ls -la
+                '''
             }
         }
 
@@ -73,7 +39,7 @@ pipeline {
         stage('Login to Docker Hub') {
             steps {
                 withCredentials([usernamePassword(
-                    credentialsId: '4ec188ef-72fe-4bfb-86c3-616e90e9e00f',
+                    credentialsId: 'docker-id',
                     usernameVariable: 'DOCKER_USERNAME',
                     passwordVariable: 'DOCKER_PASSWORD'
                 )]) {
@@ -99,24 +65,17 @@ pipeline {
                 sh '''
                 echo "🚀 Deploying to Kubernetes..."
                 microk8s.kubectl apply -f $DEPLOY_FILE
-                echo "Waiting for pods..."
-                sleep 20
+                sleep 15
                 microk8s.kubectl get pods
                 '''
             }
         }
 
-        stage('Apply Ingress & Verify') {
+        stage('Verify Application') {
             steps {
                 sh '''
-                echo "🌐 Applying Ingress..."
-                microk8s.kubectl apply -f $DEPLOY_FILE
-                echo "Waiting for ingress..."
-                sleep 20
-                microk8s.kubectl get ingress
-                echo "🔍 Verifying application..."
-                curl -I http://$DOMAIN || echo "⚠️ Curl verification failed."
-                echo "✅ Deployment complete! Access: http://$DOMAIN"
+                echo "🌐 Verifying Application..."
+                curl -I http://$DOMAIN || echo "⚠️ Application not reachable yet"
                 '''
             }
         }
@@ -124,14 +83,10 @@ pipeline {
 
     post {
         success {
-            echo '✅ CI/CD pipeline executed successfully.'
+            echo "✅ CI/CD Pipeline completed successfully!"
         }
         failure {
-            echo '❌ Build or deployment failed. Check logs.'
-        }
-        aborted {
-            echo '⚠️ Pipeline aborted by user.'
+            echo "❌ Build or Deployment failed. Check logs carefully."
         }
     }
 }
-
